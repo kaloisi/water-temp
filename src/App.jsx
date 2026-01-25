@@ -180,7 +180,7 @@ function App() {
               <p className="station-id">{station.id}</p>
               {temp !== undefined ? (
                 <>
-                  <p className="temperature">{temp}°F</p>
+                  <p className="temperature">{temp.toFixed(1)}°F</p>
                   <p className="obs-time">
                     {obsTime ? new Date(obsTime).toLocaleString() : 'N/A'}
                   </p>
@@ -228,7 +228,7 @@ function App() {
                 labelFormatter={(label) => new Date(label).toLocaleString()}
                 formatter={(value, name) => {
                   const station = STATIONS.find(s => s.id === name);
-                  return [`${value}°F`, station?.name || name];
+                  return [`${Number(value).toFixed(1)}°F`, station?.name || name];
                 }}
                 contentStyle={{ backgroundColor: '#1a1a2e', border: '1px solid #334', color: '#eaeaea' }}
                 labelStyle={{ color: '#eaeaea' }}
