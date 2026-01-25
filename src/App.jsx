@@ -30,9 +30,26 @@ function App() {
         setRefreshing(true);
         setError(null);
 
-        // Only fetch current conditions for refresh
-        const current = await fetchAllCurrentConditions();
+        // Fetch current conditions and today's data to append new samples
+        const [current, todayData] = await Promise.all([
+          fetchAllCurrentConditions(),
+          fetchLastNDaysData(1)
+        ]);
         setCurrentConditions(current);
+
+        // Merge new samples into existing chart data
+        const newSamples = mergeHistoricalData(todayData);
+        setChartData(prevData => {
+          const timeMap = new Map();
+          for (const point of prevData) {
+            timeMap.set(point.time, point);
+          }
+          for (const point of newSamples) {
+            timeMap.set(point.time, point);
+          }
+          return Array.from(timeMap.values()).sort((a, b) => a.timestamp - b.timestamp);
+        });
+
         setLastUpdated(new Date());
       } else {
         setLoading(true);
