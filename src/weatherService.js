@@ -5,34 +5,31 @@ const STATIONS = [
   { id: 'KMAWEBST37', name: 'Air Temp' }
 ];
 
-const CORS_PROXY = 'https://corsproxy.io/?';
+const CORS_PROXY = 'https://proxy.corsfix.com/?';
+
+const NO_CACHE_HEADERS = {
+  'Cache-Control': 'no-cache, no-store, must-revalidate',
+  'Pragma': 'no-cache',
+  'Expires': '0'
+};
 
 export async function fetchCurrentConditions(stationId) {
-  const url = `https://api.weather.com/v2/pws/observations/current?stationId=${stationId}&format=json&units=e&apiKey=${API_KEY}`;
-  const proxyUrl = CORS_PROXY + encodeURIComponent(url) + '&_=' + Date.now();
-  const response = await fetch(proxyUrl);
+  const url = `https://api.weather.com/v2/pws/observations/current?stationId=${stationId}&format=json&units=e&&apiKey=${API_KEY}`;
+  console.log(`Fetching current conditions from URL: ${url}`);
+  const proxyUrl = CORS_PROXY + url;
+  const response = await fetch(proxyUrl, { headers: NO_CACHE_HEADERS });
   if (!response.ok) {
     throw new Error(`Failed to fetch current conditions for ${stationId}`);
   }
   return response.json();
 }
 
-function isToday(date) {
-  const today = new Date();
-  return date.toDateString() === today.toDateString();
-}
 
 export async function fetchHistoricalData(stationId, date) {
   const formattedDate = date.toISOString().split('T')[0].replace(/-/g, '');
   const url = `https://api.weather.com/v2/pws/history/all?stationId=${stationId}&format=json&units=e&date=${formattedDate}&apiKey=${API_KEY}`;
-
-  // Add cache buster for today's data to prevent stale responses
-  let proxyUrl = CORS_PROXY + encodeURIComponent(url);
-  if (isToday(date)) {
-    proxyUrl += '&_=' + Date.now();
-  }
-
-  const response = await fetch(proxyUrl);
+  const proxyUrl = CORS_PROXY + url;
+  const response = await fetch(proxyUrl, { headers: NO_CACHE_HEADERS });
   if (!response.ok) {
     throw new Error(`Failed to fetch historical data for ${stationId} on ${formattedDate}`);
   }

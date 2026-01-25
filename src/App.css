@@ -1,3 +1,9 @@
+body {
+  background: #1a1a2e;
+  color: #eaeaea;
+  margin: 0;
+}
+
 .app {
   max-width: 1200px;
   margin: 0 auto;
@@ -11,7 +17,7 @@
 }
 
 .header h1 {
-  color: #333;
+  color: #eaeaea;
   margin: 0 0 16px 0;
 }
 
@@ -45,7 +51,7 @@
 }
 
 .last-updated {
-  color: #666;
+  color: #aaa;
   font-size: 0.9rem;
 }
 
@@ -58,6 +64,7 @@
 
 .chart-header h2 {
   margin: 0;
+  color: #eaeaea;
 }
 
 .fetch-more-button {
@@ -90,53 +97,58 @@
 }
 
 .temp-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #16213e 0%, #1a1a2e 100%);
+  border: 1px solid #334;
   border-radius: 16px;
   padding: 24px 40px;
   color: white;
   text-align: center;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
   min-width: 200px;
 }
 
 .temp-card h2 {
   margin: 0 0 8px 0;
   font-size: 1.5rem;
+  color: #667eea;
 }
 
 .temp-card .station-id {
   margin: 0 0 16px 0;
   font-size: 0.85rem;
-  opacity: 0.8;
+  opacity: 0.6;
 }
 
 .temp-card .temperature {
   font-size: 3rem;
   font-weight: bold;
   margin: 0;
+  color: #4ecca3;
 }
 
 .temp-card .obs-time {
   margin: 12px 0 0 0;
   font-size: 0.85rem;
-  opacity: 0.9;
+  opacity: 0.7;
 }
 
 .temp-card .no-data {
   font-style: italic;
-  opacity: 0.8;
+  opacity: 0.6;
+  color: #ff6b6b;
 }
 
 .chart-container {
-  background: white;
+  background: #16213e;
+  border: 1px solid #334;
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .chart-container h2 {
   text-align: center;
-  color: #333;
+  color: #eaeaea;
   margin-bottom: 20px;
 }
 
@@ -146,7 +158,7 @@
   align-items: center;
   height: 100vh;
   font-size: 1.5rem;
-  color: #666;
+  color: #aaa;
 }
 
 .error {
@@ -157,15 +169,16 @@
   gap: 20px;
   height: 50vh;
   font-size: 1.2rem;
-  color: #d32f2f;
-  background: #ffebee;
+  color: #ff6b6b;
+  background: #2a1a1a;
+  border: 1px solid #ff6b6b;
   border-radius: 8px;
   padding: 20px;
 }
 
 .no-data {
   text-align: center;
-  color: #666;
+  color: #888;
   font-style: italic;
   padding: 40px;
 }

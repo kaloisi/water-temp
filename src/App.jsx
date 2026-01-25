@@ -207,7 +207,7 @@ function App() {
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height={400}>
             <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#334" />
               <XAxis
                 dataKey="time"
                 tickFormatter={formatXAxis}
@@ -215,10 +215,14 @@ function App() {
                 textAnchor="end"
                 height={80}
                 interval="preserveStartEnd"
+                stroke="#888"
+                tick={{ fill: '#aaa' }}
               />
               <YAxis
-                label={{ value: 'Temperature (°F)', angle: -90, position: 'insideLeft' }}
+                label={{ value: 'Temperature (°F)', angle: -90, position: 'insideLeft', fill: '#aaa' }}
                 domain={['auto', 'auto']}
+                stroke="#888"
+                tick={{ fill: '#aaa' }}
               />
               <Tooltip
                 labelFormatter={(label) => new Date(label).toLocaleString()}
@@ -226,18 +230,21 @@ function App() {
                   const station = STATIONS.find(s => s.id === name);
                   return [`${value}°F`, station?.name || name];
                 }}
+                contentStyle={{ backgroundColor: '#1a1a2e', border: '1px solid #334', color: '#eaeaea' }}
+                labelStyle={{ color: '#eaeaea' }}
               />
               <Legend
                 formatter={(value) => {
                   const station = STATIONS.find(s => s.id === value);
                   return station?.name || value;
                 }}
+                wrapperStyle={{ color: '#eaeaea' }}
               />
               <Line
                 type="monotone"
                 dataKey="KMAWEBST38"
                 name="KMAWEBST38"
-                stroke="#2196F3"
+                stroke="#4ecca3"
                 strokeWidth={2}
                 dot={false}
                 connectNulls
@@ -246,7 +253,7 @@ function App() {
                 type="monotone"
                 dataKey="KMAWEBST37"
                 name="KMAWEBST37"
-                stroke="#FF5722"
+                stroke="#ff6b6b"
                 strokeWidth={2}
                 dot={false}
                 connectNulls
