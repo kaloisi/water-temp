@@ -63,6 +63,46 @@ export async function fetchLast3DaysData() {
   return allData;
 }
 
+export async function fetchLast24HoursData() {
+  const now = new Date();
+  const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+  // Fetch today and yesterday to cover the full 24-hour window
+  const dates = [new Date(), new Date(now.getTime() - 24 * 60 * 60 * 1000)];
+
+  const allData = {};
+
+  for (const station of STATIONS) {
+    allData[station.id] = {
+      name: station.name,
+      data: []
+    };
+
+    for (const date of dates) {
+      try {
+        const result = await fetchHistoricalData(station.id, date);
+        if (result.observations) {
+          allData[station.id].data.push(...result.observations);
+        }
+      } catch (error) {
+        console.error(`Error fetching data for ${station.id} on ${date}:`, error);
+      }
+    }
+
+    // Filter to only include data from the last 24 hours
+    allData[station.id].data = allData[station.id].data.filter(obs => {
+      const obsTime = new Date(obs.obsTimeLocal);
+      return obsTime >= twentyFourHoursAgo && obsTime <= now;
+    });
+
+    allData[station.id].data.sort((a, b) =>
+      new Date(a.obsTimeLocal) - new Date(b.obsTimeLocal)
+    );
+  }
+
+  return allData;
+}
+
 export async function fetchAllCurrentConditions() {
   const results = {};
 

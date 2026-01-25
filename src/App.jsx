@@ -9,7 +9,7 @@ import {
   Legend,
   ResponsiveContainer
 } from 'recharts';
-import { fetchAllCurrentConditions, fetchLast3DaysData, STATIONS } from './weatherService';
+import { fetchAllCurrentConditions, fetchLast3DaysData, fetchLast24HoursData, STATIONS } from './weatherService';
 import './App.css';
 
 const AUTO_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
@@ -21,8 +21,9 @@ function App() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [dataRange, setDataRange] = useState('3days'); // '3days' or '24hours'
 
-  const loadData = useCallback(async (isManualRefresh = false) => {
+  const loadData = useCallback(async (isManualRefresh = false, range = '3days') => {
     try {
       if (isManualRefresh) {
         setRefreshing(true);
@@ -31,12 +32,15 @@ function App() {
       }
       setError(null);
 
+      const fetchHistorical = range === '24hours' ? fetchLast24HoursData : fetchLast3DaysData;
+
       const [current, historical] = await Promise.all([
         fetchAllCurrentConditions(),
-        fetchLast3DaysData()
+        fetchHistorical()
       ]);
 
       setCurrentConditions(current);
+      setDataRange(range);
 
       const mergedData = mergeHistoricalData(historical);
       setChartData(mergedData);
@@ -93,7 +97,15 @@ function App() {
   }
 
   function handleRefresh() {
-    loadData(true);
+    loadData(true, dataRange);
+  }
+
+  function handleLoad24Hours() {
+    loadData(true, '24hours');
+  }
+
+  function handleLoad3Days() {
+    loadData(true, '3days');
   }
 
   if (loading) {
@@ -127,6 +139,22 @@ function App() {
           >
             {refreshing ? 'Refreshing...' : 'Refresh'}
           </button>
+          <div className="range-buttons">
+            <button
+              className={`range-button ${dataRange === '24hours' ? 'active' : ''}`}
+              onClick={handleLoad24Hours}
+              disabled={refreshing}
+            >
+              Last 24 Hours
+            </button>
+            <button
+              className={`range-button ${dataRange === '3days' ? 'active' : ''}`}
+              onClick={handleLoad3Days}
+              disabled={refreshing}
+            >
+              Last 3 Days
+            </button>
+          </div>
           {lastUpdated && (
             <span className="last-updated">
               Last updated: {lastUpdated.toLocaleTimeString()}
@@ -161,7 +189,7 @@ function App() {
       </div>
 
       <div className="chart-container">
-        <h2>Temperature History (Last 3 Days)</h2>
+        <h2>Temperature History ({dataRange === '24hours' ? 'Last 24 Hours' : 'Last 3 Days'})</h2>
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height={400}>
             <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
