@@ -10,7 +10,8 @@ const CORS_PROXY = 'https://proxy.corsfix.com/?';
 const NO_CACHE_HEADERS = {
   'Cache-Control': 'no-cache, no-store, must-revalidate',
   'Pragma': 'no-cache',
-  'Expires': '0'
+  'Expires': '0',
+  "x-corsfix-cache": "false"
 };
 
 export async function fetchCurrentConditions(stationId) {
