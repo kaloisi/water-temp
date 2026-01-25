@@ -49,6 +49,37 @@
   font-size: 0.9rem;
 }
 
+.range-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.range-button {
+  background: #e0e0e0;
+  color: #333;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.range-button:hover:not(:disabled) {
+  background: #d0d0d0;
+  transform: translateY(-1px);
+}
+
+.range-button.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.range-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .current-temps {
   display: flex;
   justify-content: center;
