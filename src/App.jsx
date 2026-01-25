@@ -27,21 +27,27 @@ function App() {
     try {
       if (isManualRefresh) {
         setRefreshing(true);
+        setError(null);
+
+        // Only fetch current conditions for refresh
+        const current = await fetchAllCurrentConditions();
+        setCurrentConditions(current);
+        setLastUpdated(new Date());
       } else {
         setLoading(true);
+        setError(null);
+
+        const [current, historical] = await Promise.all([
+          fetchAllCurrentConditions(),
+          fetchLast3DaysData()
+        ]);
+
+        setCurrentConditions(current);
+
+        const mergedData = mergeHistoricalData(historical);
+        setChartData(mergedData);
+        setLastUpdated(new Date());
       }
-      setError(null);
-
-      const [current, historical] = await Promise.all([
-        fetchAllCurrentConditions(),
-        fetchLast3DaysData()
-      ]);
-
-      setCurrentConditions(current);
-
-      const mergedData = mergeHistoricalData(historical);
-      setChartData(mergedData);
-      setLastUpdated(new Date());
     } catch (err) {
       setError(err.message);
       console.error('Error loading data:', err);
