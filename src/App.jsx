@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   LineChart,
   Line,
@@ -12,37 +12,54 @@ import {
 import { fetchAllCurrentConditions, fetchLast3DaysData, STATIONS } from './weatherService';
 import './App.css';
 
+const AUTO_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+
 function App() {
   const [currentConditions, setCurrentConditions] = useState({});
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+
+  const loadData = useCallback(async (isManualRefresh = false) => {
+    try {
+      if (isManualRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+      setError(null);
+
+      const [current, historical] = await Promise.all([
+        fetchAllCurrentConditions(),
+        fetchLast3DaysData()
+      ]);
+
+      setCurrentConditions(current);
+
+      const mergedData = mergeHistoricalData(historical);
+      setChartData(mergedData);
+      setLastUpdated(new Date());
+    } catch (err) {
+      setError(err.message);
+      console.error('Error loading data:', err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
-    async function loadData() {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const [current, historical] = await Promise.all([
-          fetchAllCurrentConditions(),
-          fetchLast3DaysData()
-        ]);
-
-        setCurrentConditions(current);
-
-        const mergedData = mergeHistoricalData(historical);
-        setChartData(mergedData);
-      } catch (err) {
-        setError(err.message);
-        console.error('Error loading data:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
     loadData();
-  }, []);
+
+    // Set up auto-refresh
+    const intervalId = setInterval(() => {
+      loadData(true);
+    }, AUTO_REFRESH_INTERVAL);
+
+    return () => clearInterval(intervalId);
+  }, [loadData]);
 
   function mergeHistoricalData(historical) {
     const timeMap = new Map();
@@ -58,7 +75,11 @@ function App() {
             timestamp: new Date(time).getTime()
           });
         }
-        timeMap.get(time)[station.id] = obs.imperial?.temp ?? obs.metric?.temp;
+        // Historical API returns tempAvg directly on the observation for imperial units
+        const temp = obs.tempAvg ?? obs.imperial?.tempAvg ?? obs.imperial?.temp ?? obs.metric?.tempAvg;
+        if (temp !== undefined && temp !== null) {
+          timeMap.get(time)[station.id] = temp;
+        }
       }
     }
 
@@ -69,6 +90,10 @@ function App() {
   function formatXAxis(timeStr) {
     const date = new Date(timeStr);
     return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+  }
+
+  function handleRefresh() {
+    loadData(true);
   }
 
   if (loading) {
@@ -83,13 +108,32 @@ function App() {
     return (
       <div className="app">
         <div className="error">Error: {error}</div>
+        <button className="refresh-button" onClick={handleRefresh}>
+          Try Again
+        </button>
       </div>
     );
   }
 
   return (
     <div className="app">
-      <h1>Weather Station Temperatures</h1>
+      <header className="header">
+        <h1>Weather Station Temperatures</h1>
+        <div className="refresh-section">
+          <button
+            className="refresh-button"
+            onClick={handleRefresh}
+            disabled={refreshing}
+          >
+            {refreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
+          {lastUpdated && (
+            <span className="last-updated">
+              Last updated: {lastUpdated.toLocaleTimeString()}
+            </span>
+          )}
+        </div>
+      </header>
 
       <div className="current-temps">
         {STATIONS.map((station) => {
@@ -150,6 +194,7 @@ function App() {
               <Line
                 type="monotone"
                 dataKey="KMAWEBST38"
+                name="KMAWEBST38"
                 stroke="#2196F3"
                 strokeWidth={2}
                 dot={false}
@@ -158,6 +203,7 @@ function App() {
               <Line
                 type="monotone"
                 dataKey="KMAWEBST37"
+                name="KMAWEBST37"
                 stroke="#FF5722"
                 strokeWidth={2}
                 dot={false}
