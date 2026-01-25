@@ -9,7 +9,7 @@ import {
   Legend,
   ResponsiveContainer
 } from 'recharts';
-import { fetchAllCurrentConditions, fetchLast3DaysData, fetchPrevious24Hours, STATIONS } from './weatherService';
+import { fetchAllCurrentConditions, fetchLastNDaysData, STATIONS } from './weatherService';
 import './App.css';
 
 const AUTO_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
@@ -19,11 +19,12 @@ function App() {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [fetchingMore, setFetchingMore] = useState(false);
+  const [loadingChart, setLoadingChart] = useState(false);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [selectedDays, setSelectedDays] = useState(3);
 
-  const loadData = useCallback(async (isManualRefresh = false) => {
+  const loadData = useCallback(async (isManualRefresh = false, days = 3) => {
     try {
       if (isManualRefresh) {
         setRefreshing(true);
@@ -39,7 +40,7 @@ function App() {
 
         const [current, historical] = await Promise.all([
           fetchAllCurrentConditions(),
-          fetchLast3DaysData()
+          fetchLastNDaysData(days)
         ]);
 
         setCurrentConditions(current);
@@ -103,35 +104,19 @@ function App() {
     loadData(true);
   }
 
-  async function handleFetchPrevious24Hours() {
-    if (chartData.length === 0) return;
+  async function handleDaysChange(event) {
+    const days = parseInt(event.target.value, 10);
+    setSelectedDays(days);
 
     try {
-      setFetchingMore(true);
-
-      // Find the earliest timestamp in the current dataset
-      const earliestTimestamp = chartData[0].time;
-
-      // Fetch the previous 24 hours of data
-      const historical = await fetchPrevious24Hours(earliestTimestamp);
-
-      // Merge the new data
-      const newData = mergeHistoricalData(historical);
-
-      // Prepend the new data to the existing chart data
-      setChartData(prevData => {
-        const combined = [...newData, ...prevData];
-        // Remove duplicates by time
-        const timeMap = new Map();
-        for (const point of combined) {
-          timeMap.set(point.time, point);
-        }
-        return Array.from(timeMap.values()).sort((a, b) => a.timestamp - b.timestamp);
-      });
+      setLoadingChart(true);
+      const historical = await fetchLastNDaysData(days);
+      const mergedData = mergeHistoricalData(historical);
+      setChartData(mergedData);
     } catch (err) {
-      console.error('Error fetching previous 24 hours:', err);
+      console.error('Error fetching historical data:', err);
     } finally {
-      setFetchingMore(false);
+      setLoadingChart(false);
     }
   }
 
@@ -162,7 +147,7 @@ function App() {
           <button
             className="refresh-button"
             onClick={handleRefresh}
-            disabled={refreshing || fetchingMore}
+            disabled={refreshing || loadingChart}
           >
             {refreshing ? 'Refreshing...' : 'Refresh'}
           </button>
@@ -202,13 +187,19 @@ function App() {
       <div className="chart-container">
         <div className="chart-header">
           <h2>Temperature History</h2>
-          <button
-            className="fetch-more-button"
-            onClick={handleFetchPrevious24Hours}
-            disabled={refreshing || fetchingMore || chartData.length === 0}
+          <select
+            className="days-select"
+            value={selectedDays}
+            onChange={handleDaysChange}
+            disabled={refreshing || loadingChart}
           >
-            {fetchingMore ? 'Fetching...' : 'Fetch Previous 24 Hours'}
-          </button>
+            <option value={3}>3 days</option>
+            <option value={7}>7 days</option>
+            <option value={14}>14 days</option>
+            <option value={28}>28 days</option>
+            <option value={45}>45 days</option>
+          </select>
+          {loadingChart && <span className="loading-indicator">Loading...</span>}
         </div>
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height={400}>

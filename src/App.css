@@ -67,7 +67,7 @@ body {
   color: #eaeaea;
 }
 
-.fetch-more-button {
+.days-select {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
@@ -75,17 +75,22 @@ body {
   border-radius: 8px;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.2s;
+  transition: opacity 0.2s;
 }
 
-.fetch-more-button:hover:not(:disabled) {
+.days-select:hover:not(:disabled) {
   opacity: 0.9;
-  transform: translateY(-1px);
 }
 
-.fetch-more-button:disabled {
+.days-select:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.loading-indicator {
+  color: #aaa;
+  font-size: 0.9rem;
+  margin-left: 12px;
 }
 
 .current-temps {
