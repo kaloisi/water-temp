@@ -8,7 +8,7 @@ const STATIONS = [
 const CORS_PROXY = 'https://corsproxy.io/?';
 
 export async function fetchCurrentConditions(stationId) {
-  const cacheBuster = Math.random().toString(36).substring(7);
+  const cacheBuster = Date.now();
   const url = `https://api.weather.com/v2/pws/observations/current?stationId=${stationId}&format=json&units=e&apiKey=${API_KEY}&_=${cacheBuster}`;
   const response = await fetch(CORS_PROXY + encodeURIComponent(url));
   if (!response.ok) {
@@ -28,8 +28,7 @@ export async function fetchHistoricalData(stationId, date) {
 
   // Add cache buster for today's data to prevent stale responses
   if (isToday(date)) {
-    const cacheBuster = Math.random().toString(36).substring(7);
-    url += `&_=${cacheBuster}`;
+    url += `&_=${Date.now()}`;
   }
 
   const response = await fetch(CORS_PROXY + encodeURIComponent(url));
