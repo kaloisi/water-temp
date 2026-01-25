@@ -1,4 +1,8 @@
-const API_KEY = '76ac86a6e10f44d6ac86a6e10ff4d6e6';
+const DEFAULT_API_KEY = '76ac86a6e10f44d6ac86a6e10ff4d6e6';
+
+// Check URL for apiKey parameter, use default if not present
+const urlParams = new URLSearchParams(window.location.search);
+const API_KEY = urlParams.get('apiKey') || DEFAULT_API_KEY;
 
 const STATIONS = [
   { id: 'KMAWEBST38', name: 'Water Temp' },

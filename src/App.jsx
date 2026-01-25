@@ -37,6 +37,20 @@ function App() {
         ]);
         setCurrentConditions(current);
 
+        // Create a new sample point using current time and current conditions
+        const now = new Date();
+        const currentTimeStr = now.toISOString();
+        const currentSample = {
+          time: currentTimeStr,
+          timestamp: now.getTime()
+        };
+        for (const station of STATIONS) {
+          const temp = current[station.id]?.data?.imperial?.temp;
+          if (temp !== undefined && temp !== null) {
+            currentSample[station.id] = temp;
+          }
+        }
+
         // Merge new samples into existing chart data
         const newSamples = mergeHistoricalData(todayData);
         setChartData(prevData => {
@@ -47,10 +61,12 @@ function App() {
           for (const point of newSamples) {
             timeMap.set(point.time, point);
           }
+          // Add current sample with current time
+          timeMap.set(currentTimeStr, currentSample);
           return Array.from(timeMap.values()).sort((a, b) => a.timestamp - b.timestamp);
         });
 
-        setLastUpdated(new Date());
+        setLastUpdated(now);
       } else {
         setLoading(true);
         setError(null);
