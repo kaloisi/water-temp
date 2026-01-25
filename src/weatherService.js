@@ -15,7 +15,7 @@ const NO_CACHE_HEADERS = {
 };
 
 export async function fetchCurrentConditions(stationId) {
-  const url = `https://api.weather.com/v2/pws/observations/current?stationId=${stationId}&format=json&units=e&&apiKey=${API_KEY}`;
+  const url = `https://api.weather.com/v2/pws/observations/current?stationId=${stationId}&format=json&units=e&numericPrecision=decimal&apiKey=${API_KEY}`;
   console.log(`Fetching current conditions from URL: ${url}`);
   const proxyUrl = CORS_PROXY + url;
   const response = await fetch(proxyUrl, { headers: NO_CACHE_HEADERS });
@@ -28,7 +28,7 @@ export async function fetchCurrentConditions(stationId) {
 
 export async function fetchHistoricalData(stationId, date) {
   const formattedDate = date.toISOString().split('T')[0].replace(/-/g, '');
-  const url = `https://api.weather.com/v2/pws/history/all?stationId=${stationId}&format=json&units=e&date=${formattedDate}&apiKey=${API_KEY}`;
+  const url = `https://api.weather.com/v2/pws/history/all?stationId=${stationId}&format=json&units=e&numericPrecision=decimal&date=${formattedDate}&apiKey=${API_KEY}`;
   const proxyUrl = CORS_PROXY + url;
   const response = await fetch(proxyUrl, { headers: NO_CACHE_HEADERS });
   if (!response.ok) {
