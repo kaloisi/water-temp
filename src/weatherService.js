@@ -8,9 +8,8 @@ const STATIONS = [
 const CORS_PROXY = 'https://corsproxy.io/?';
 
 export async function fetchCurrentConditions(stationId) {
-  const cacheBuster = Date.now();
-  const url = `https://api.weather.com/v2/pws/observations/current?stationId=${stationId}&format=json&units=e&apiKey=${API_KEY}&_=${cacheBuster}`;
-  const response = await fetch(CORS_PROXY + encodeURIComponent(url));
+  const url = `https://api.weather.com/v2/pws/observations/current?stationId=${stationId}&format=json&units=e&apiKey=${API_KEY}`;
+  const response = await fetch(CORS_PROXY + encodeURIComponent(url), { cache: 'no-store' });
   if (!response.ok) {
     throw new Error(`Failed to fetch current conditions for ${stationId}`);
   }
@@ -24,14 +23,12 @@ function isToday(date) {
 
 export async function fetchHistoricalData(stationId, date) {
   const formattedDate = date.toISOString().split('T')[0].replace(/-/g, '');
-  let url = `https://api.weather.com/v2/pws/history/all?stationId=${stationId}&format=json&units=e&date=${formattedDate}&apiKey=${API_KEY}`;
+  const url = `https://api.weather.com/v2/pws/history/all?stationId=${stationId}&format=json&units=e&date=${formattedDate}&apiKey=${API_KEY}`;
 
-  // Add cache buster for today's data to prevent stale responses
-  if (isToday(date)) {
-    url += `&_=${Date.now()}`;
-  }
+  // Use no-store cache for today's data to prevent stale responses
+  const fetchOptions = isToday(date) ? { cache: 'no-store' } : {};
 
-  const response = await fetch(CORS_PROXY + encodeURIComponent(url));
+  const response = await fetch(CORS_PROXY + encodeURIComponent(url), fetchOptions);
   if (!response.ok) {
     throw new Error(`Failed to fetch historical data for ${stationId} on ${formattedDate}`);
   }
