@@ -49,33 +49,34 @@
   font-size: 0.9rem;
 }
 
-.range-buttons {
+.chart-header {
   display: flex;
-  gap: 8px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
-.range-button {
-  background: #e0e0e0;
-  color: #333;
+.chart-header h2 {
+  margin: 0;
+}
+
+.fetch-more-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
+  padding: 10px 20px;
+  border-radius: 8px;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: background 0.2s, transform 0.2s;
+  transition: opacity 0.2s, transform 0.2s;
 }
 
-.range-button:hover:not(:disabled) {
-  background: #d0d0d0;
+.fetch-more-button:hover:not(:disabled) {
+  opacity: 0.9;
   transform: translateY(-1px);
 }
 
-.range-button.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.range-button:disabled {
+.fetch-more-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
