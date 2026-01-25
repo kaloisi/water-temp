@@ -9,7 +9,7 @@ import {
   Legend,
   ResponsiveContainer
 } from 'recharts';
-import { fetchAllCurrentConditions, fetchLast3DaysData, fetchLast24HoursData, STATIONS } from './weatherService';
+import { fetchAllCurrentConditions, fetchLast3DaysData, fetchPrevious24Hours, STATIONS } from './weatherService';
 import './App.css';
 
 const AUTO_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
@@ -19,11 +19,11 @@ function App() {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [fetchingMore, setFetchingMore] = useState(false);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
-  const [dataRange, setDataRange] = useState('3days'); // '3days' or '24hours'
 
-  const loadData = useCallback(async (isManualRefresh = false, range = '3days') => {
+  const loadData = useCallback(async (isManualRefresh = false) => {
     try {
       if (isManualRefresh) {
         setRefreshing(true);
@@ -32,15 +32,12 @@ function App() {
       }
       setError(null);
 
-      const fetchHistorical = range === '24hours' ? fetchLast24HoursData : fetchLast3DaysData;
-
       const [current, historical] = await Promise.all([
         fetchAllCurrentConditions(),
-        fetchHistorical()
+        fetchLast3DaysData()
       ]);
 
       setCurrentConditions(current);
-      setDataRange(range);
 
       const mergedData = mergeHistoricalData(historical);
       setChartData(mergedData);
@@ -97,15 +94,39 @@ function App() {
   }
 
   function handleRefresh() {
-    loadData(true, dataRange);
+    loadData(true);
   }
 
-  function handleLoad24Hours() {
-    loadData(true, '24hours');
-  }
+  async function handleFetchPrevious24Hours() {
+    if (chartData.length === 0) return;
 
-  function handleLoad3Days() {
-    loadData(true, '3days');
+    try {
+      setFetchingMore(true);
+
+      // Find the earliest timestamp in the current dataset
+      const earliestTimestamp = chartData[0].time;
+
+      // Fetch the previous 24 hours of data
+      const historical = await fetchPrevious24Hours(earliestTimestamp);
+
+      // Merge the new data
+      const newData = mergeHistoricalData(historical);
+
+      // Prepend the new data to the existing chart data
+      setChartData(prevData => {
+        const combined = [...newData, ...prevData];
+        // Remove duplicates by time
+        const timeMap = new Map();
+        for (const point of combined) {
+          timeMap.set(point.time, point);
+        }
+        return Array.from(timeMap.values()).sort((a, b) => a.timestamp - b.timestamp);
+      });
+    } catch (err) {
+      console.error('Error fetching previous 24 hours:', err);
+    } finally {
+      setFetchingMore(false);
+    }
   }
 
   if (loading) {
@@ -135,26 +156,10 @@ function App() {
           <button
             className="refresh-button"
             onClick={handleRefresh}
-            disabled={refreshing}
+            disabled={refreshing || fetchingMore}
           >
             {refreshing ? 'Refreshing...' : 'Refresh'}
           </button>
-          <div className="range-buttons">
-            <button
-              className={`range-button ${dataRange === '24hours' ? 'active' : ''}`}
-              onClick={handleLoad24Hours}
-              disabled={refreshing}
-            >
-              Last 24 Hours
-            </button>
-            <button
-              className={`range-button ${dataRange === '3days' ? 'active' : ''}`}
-              onClick={handleLoad3Days}
-              disabled={refreshing}
-            >
-              Last 3 Days
-            </button>
-          </div>
           {lastUpdated && (
             <span className="last-updated">
               Last updated: {lastUpdated.toLocaleTimeString()}
@@ -189,7 +194,16 @@ function App() {
       </div>
 
       <div className="chart-container">
-        <h2>Temperature History ({dataRange === '24hours' ? 'Last 24 Hours' : 'Last 3 Days'})</h2>
+        <div className="chart-header">
+          <h2>Temperature History</h2>
+          <button
+            className="fetch-more-button"
+            onClick={handleFetchPrevious24Hours}
+            disabled={refreshing || fetchingMore || chartData.length === 0}
+          >
+            {fetchingMore ? 'Fetching...' : 'Fetch Previous 24 Hours'}
+          </button>
+        </div>
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height={400}>
             <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>

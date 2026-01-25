@@ -63,12 +63,14 @@ export async function fetchLast3DaysData() {
   return allData;
 }
 
-export async function fetchLast24HoursData() {
-  const now = new Date();
-  const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+export async function fetchPrevious24Hours(earliestTimestamp) {
+  const endTime = new Date(earliestTimestamp);
+  const startTime = new Date(endTime.getTime() - 24 * 60 * 60 * 1000);
 
-  // Fetch today and yesterday to cover the full 24-hour window
-  const dates = [new Date(), new Date(now.getTime() - 24 * 60 * 60 * 1000)];
+  // Fetch data for both days that might contain the 24-hour window
+  const dates = new Set();
+  dates.add(new Date(startTime).toDateString());
+  dates.add(new Date(endTime).toDateString());
 
   const allData = {};
 
@@ -78,7 +80,8 @@ export async function fetchLast24HoursData() {
       data: []
     };
 
-    for (const date of dates) {
+    for (const dateStr of dates) {
+      const date = new Date(dateStr);
       try {
         const result = await fetchHistoricalData(station.id, date);
         if (result.observations) {
@@ -89,10 +92,10 @@ export async function fetchLast24HoursData() {
       }
     }
 
-    // Filter to only include data from the last 24 hours
+    // Filter to only include data from the 24-hour window before earliestTimestamp
     allData[station.id].data = allData[station.id].data.filter(obs => {
       const obsTime = new Date(obs.obsTimeLocal);
-      return obsTime >= twentyFourHoursAgo && obsTime <= now;
+      return obsTime >= startTime && obsTime < endTime;
     });
 
     allData[station.id].data.sort((a, b) =>
