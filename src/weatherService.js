@@ -1,4 +1,8 @@
-const API_KEY = '76ac86a6e10f44d6ac86a6e10ff4d6e6';
+const DEFAULT_API_KEY = '76ac86a6e10f44d6ac86a6e10ff4d6e6';
+
+// Check URL for apiKey parameter, use default if not present
+const urlParams = new URLSearchParams(window.location.search);
+const API_KEY = urlParams.get('apiKey') || DEFAULT_API_KEY;
 
 const STATIONS = [
   { id: 'KMAWEBST38', name: 'Water Temp' },
@@ -15,7 +19,7 @@ const NO_CACHE_HEADERS = {
 };
 
 export async function fetchCurrentConditions(stationId) {
-  const url = `https://api.weather.com/v2/pws/observations/current?stationId=${stationId}&format=json&units=e&&apiKey=${API_KEY}`;
+  const url = `https://api.weather.com/v2/pws/observations/current?stationId=${stationId}&format=json&units=e&numericPrecision=decimal&apiKey=${API_KEY}`;
   console.log(`Fetching current conditions from URL: ${url}`);
   const proxyUrl = CORS_PROXY + url;
   const response = await fetch(proxyUrl, { headers: NO_CACHE_HEADERS });
@@ -28,7 +32,7 @@ export async function fetchCurrentConditions(stationId) {
 
 export async function fetchHistoricalData(stationId, date) {
   const formattedDate = date.toISOString().split('T')[0].replace(/-/g, '');
-  const url = `https://api.weather.com/v2/pws/history/all?stationId=${stationId}&format=json&units=e&date=${formattedDate}&apiKey=${API_KEY}`;
+  const url = `https://api.weather.com/v2/pws/history/all?stationId=${stationId}&format=json&units=e&numericPrecision=decimal&date=${formattedDate}&apiKey=${API_KEY}`;
   const proxyUrl = CORS_PROXY + url;
   const response = await fetch(proxyUrl, { headers: NO_CACHE_HEADERS });
   if (!response.ok) {
@@ -37,11 +41,11 @@ export async function fetchHistoricalData(stationId, date) {
   return response.json();
 }
 
-export async function fetchLast3DaysData() {
+export async function fetchLastNDaysData(days = 3) {
   const today = new Date();
   const dates = [];
 
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < days; i++) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
     dates.push(date);
@@ -65,49 +69,6 @@ export async function fetchLast3DaysData() {
         console.error(`Error fetching data for ${station.id} on ${date}:`, error);
       }
     }
-
-    allData[station.id].data.sort((a, b) =>
-      new Date(a.obsTimeLocal) - new Date(b.obsTimeLocal)
-    );
-  }
-
-  return allData;
-}
-
-export async function fetchPrevious24Hours(earliestTimestamp) {
-  const endTime = new Date(earliestTimestamp);
-  const startTime = new Date(endTime.getTime() - 24 * 60 * 60 * 1000);
-
-  // Fetch data for both days that might contain the 24-hour window
-  const dates = new Set();
-  dates.add(new Date(startTime).toDateString());
-  dates.add(new Date(endTime).toDateString());
-
-  const allData = {};
-
-  for (const station of STATIONS) {
-    allData[station.id] = {
-      name: station.name,
-      data: []
-    };
-
-    for (const dateStr of dates) {
-      const date = new Date(dateStr);
-      try {
-        const result = await fetchHistoricalData(station.id, date);
-        if (result.observations) {
-          allData[station.id].data.push(...result.observations);
-        }
-      } catch (error) {
-        console.error(`Error fetching data for ${station.id} on ${date}:`, error);
-      }
-    }
-
-    // Filter to only include data from the 24-hour window before earliestTimestamp
-    allData[station.id].data = allData[station.id].data.filter(obs => {
-      const obsTime = new Date(obs.obsTimeLocal);
-      return obsTime >= startTime && obsTime < endTime;
-    });
 
     allData[station.id].data.sort((a, b) =>
       new Date(a.obsTimeLocal) - new Date(b.obsTimeLocal)
