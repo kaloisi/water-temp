@@ -35,24 +35,22 @@ export default {
       });
     }
 
-    // Forward the request to the weather API with no-cache headers
+    // Forward the request to the weather API
     const apiResponse = await fetch(targetUrl, {
       headers: {
         "Accept": "application/json",
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        "Pragma": "no-cache",
+        "Accept-Encoding": "identity",
       },
     });
 
-    // Forward upstream response with CORS headers added
-    const headers = new Headers(apiResponse.headers);
-    for (const [key, value] of Object.entries(corsHeaders(request))) {
-      headers.set(key, value);
-    }
-
-    return new Response(apiResponse.body, {
+    // Read body as text to handle any encoding, then return with CORS headers
+    const body = await apiResponse.text();
+    return new Response(body, {
       status: apiResponse.status,
-      headers,
+      headers: {
+        "Content-Type": "application/json",
+        ...corsHeaders(request),
+      },
     });
   },
 };
