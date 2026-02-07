@@ -44,14 +44,15 @@ export default {
       },
     });
 
-    // Return the response with CORS headers
-    const body = await apiResponse.arrayBuffer();
-    return new Response(body, {
+    // Forward upstream response with CORS headers added
+    const headers = new Headers(apiResponse.headers);
+    for (const [key, value] of Object.entries(corsHeaders(request))) {
+      headers.set(key, value);
+    }
+
+    return new Response(apiResponse.body, {
       status: apiResponse.status,
-      headers: {
-        "Content-Type": apiResponse.headers.get("Content-Type") || "application/json",
-        ...corsHeaders(request),
-      },
+      headers,
     });
   },
 };
