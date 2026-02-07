@@ -82,5 +82,6 @@ function corsHeaders(request) {
     "Access-Control-Allow-Origin": request.headers.get("Origin") || "*",
     "Access-Control-Allow-Methods": "GET, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
+    "Cache-Control": "no-store",
   };
 }
