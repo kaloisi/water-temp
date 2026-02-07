@@ -1,17 +1,57 @@
 const DEFAULT_API_KEY = '76ac86a6e10f44d6ac86a6e10ff4d6e6';
 
-// Check URL for apiKey parameter, use default if not present
 const urlParams = new URLSearchParams(window.location.search);
 const API_KEY = urlParams.get('apiKey') || DEFAULT_API_KEY;
 
-const STATIONS = [
+export interface Station {
+  id: string;
+  name: string;
+}
+
+export const STATIONS: Station[] = [
   { id: 'KMAWEBST38', name: 'Water Temp' },
-  { id: 'KMAWEBST37', name: 'Air Temp' }
+  { id: 'KMAWEBST37', name: 'Air Temp' },
 ];
 
 const PROXY_BASE = 'https://kaloisi.white-hat-de0d.workers.dev/?url=';
 
-export async function fetchCurrentConditions(stationId) {
+export const WUNDERGROUND_DASHBOARD_URL = 'https://www.wunderground.com/dashboard/pws/';
+
+interface ImperialData {
+  temp: number;
+  tempAvg?: number;
+}
+
+interface Observation {
+  imperial: ImperialData;
+  obsTimeLocal: string;
+  tempAvg?: number;
+  metric?: { tempAvg?: number };
+}
+
+interface CurrentConditionsResponse {
+  observations: Observation[];
+}
+
+interface HistoricalResponse {
+  observations: Observation[];
+}
+
+export interface StationCurrentData {
+  name: string;
+  data: Observation | null;
+  error?: string;
+}
+
+export interface StationHistoricalData {
+  name: string;
+  data: Observation[];
+}
+
+export type CurrentConditionsMap = Record<string, StationCurrentData>;
+export type HistoricalDataMap = Record<string, StationHistoricalData>;
+
+export async function fetchCurrentConditions(stationId: string): Promise<CurrentConditionsResponse> {
   const url = `https://api.weather.com/v2/pws/observations/current?stationId=${stationId}&format=json&units=e&numericPrecision=decimal&apiKey=${API_KEY}`;
   console.log(`Fetching current conditions from URL: ${url}`);
   const response = await fetch(PROXY_BASE + encodeURIComponent(url));
@@ -21,8 +61,7 @@ export async function fetchCurrentConditions(stationId) {
   return response.json();
 }
 
-
-export async function fetchHistoricalData(stationId, date) {
+export async function fetchHistoricalData(stationId: string, date: Date): Promise<HistoricalResponse> {
   const formattedDate = date.toISOString().split('T')[0].replace(/-/g, '');
   const url = `https://api.weather.com/v2/pws/history/all?stationId=${stationId}&format=json&units=e&numericPrecision=decimal&date=${formattedDate}&apiKey=${API_KEY}`;
   const response = await fetch(PROXY_BASE + encodeURIComponent(url));
@@ -32,9 +71,9 @@ export async function fetchHistoricalData(stationId, date) {
   return response.json();
 }
 
-export async function fetchLastNDaysData(days = 3) {
+export async function fetchLastNDaysData(days = 3): Promise<HistoricalDataMap> {
   const today = new Date();
-  const dates = [];
+  const dates: Date[] = [];
 
   for (let i = 0; i < days; i++) {
     const date = new Date(today);
@@ -42,12 +81,12 @@ export async function fetchLastNDaysData(days = 3) {
     dates.push(date);
   }
 
-  const allData = {};
+  const allData: HistoricalDataMap = {};
 
   for (const station of STATIONS) {
     allData[station.id] = {
       name: station.name,
-      data: []
+      data: [],
     };
 
     for (const date of dates) {
@@ -61,35 +100,33 @@ export async function fetchLastNDaysData(days = 3) {
       }
     }
 
-    allData[station.id].data.sort((a, b) =>
-      new Date(a.obsTimeLocal) - new Date(b.obsTimeLocal)
+    allData[station.id].data.sort(
+      (a, b) => new Date(a.obsTimeLocal).getTime() - new Date(b.obsTimeLocal).getTime()
     );
   }
 
   return allData;
 }
 
-export async function fetchAllCurrentConditions() {
-  const results = {};
+export async function fetchAllCurrentConditions(): Promise<CurrentConditionsMap> {
+  const results: CurrentConditionsMap = {};
 
   for (const station of STATIONS) {
     try {
       const data = await fetchCurrentConditions(station.id);
       results[station.id] = {
         name: station.name,
-        data: data.observations?.[0] || null
+        data: data.observations?.[0] || null,
       };
     } catch (error) {
       console.error(`Error fetching current conditions for ${station.id}:`, error);
       results[station.id] = {
         name: station.name,
         data: null,
-        error: error.message
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
 
   return results;
 }
-
-export { STATIONS };
