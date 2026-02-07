@@ -35,24 +35,44 @@ export default {
       });
     }
 
-    // Forward the request to the weather API with no-cache headers
-    const apiResponse = await fetch(targetUrl, {
-      headers: {
-        "Accept": "application/json",
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        "Pragma": "no-cache",
-      },
-    });
-
-    // Forward upstream response with CORS headers added
-    const headers = new Headers(apiResponse.headers);
-    for (const [key, value] of Object.entries(corsHeaders(request))) {
-      headers.set(key, value);
+    // Forward the request to the weather API
+    let apiResponse;
+    try {
+      apiResponse = await fetch(targetUrl, {
+        headers: {
+          "Accept": "application/json",
+          "Accept-Encoding": "identity",
+        },
+      });
+    } catch (err) {
+      return new Response(JSON.stringify({ error: "Upstream fetch failed", message: err.message }), {
+        status: 502,
+        headers: { "Content-Type": "application/json", ...corsHeaders(request) },
+      });
     }
 
-    return new Response(apiResponse.body, {
+    const body = await apiResponse.text();
+
+    // Debug endpoint: add ?debug to the worker URL to see upstream details
+    if (url.searchParams.has("debug")) {
+      const debugInfo = {
+        upstreamStatus: apiResponse.status,
+        upstreamHeaders: Object.fromEntries(apiResponse.headers.entries()),
+        bodyLength: body.length,
+        bodyPreview: body.substring(0, 500),
+      };
+      return new Response(JSON.stringify(debugInfo, null, 2), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders(request) },
+      });
+    }
+
+    return new Response(body, {
       status: apiResponse.status,
-      headers,
+      headers: {
+        "Content-Type": "application/json",
+        ...corsHeaders(request),
+      },
     });
   },
 };
@@ -62,5 +82,6 @@ function corsHeaders(request) {
     "Access-Control-Allow-Origin": request.headers.get("Origin") || "*",
     "Access-Control-Allow-Methods": "GET, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
+    "Cache-Control": "no-store",
   };
 }
