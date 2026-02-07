@@ -36,15 +36,37 @@ export default {
     }
 
     // Forward the request to the weather API
-    const apiResponse = await fetch(targetUrl, {
-      headers: {
-        "Accept": "application/json",
-        "Accept-Encoding": "identity",
-      },
-    });
+    let apiResponse;
+    try {
+      apiResponse = await fetch(targetUrl, {
+        headers: {
+          "Accept": "application/json",
+          "Accept-Encoding": "identity",
+        },
+      });
+    } catch (err) {
+      return new Response(JSON.stringify({ error: "Upstream fetch failed", message: err.message }), {
+        status: 502,
+        headers: { "Content-Type": "application/json", ...corsHeaders(request) },
+      });
+    }
 
-    // Read body as text to handle any encoding, then return with CORS headers
     const body = await apiResponse.text();
+
+    // Debug endpoint: add ?debug to the worker URL to see upstream details
+    if (url.searchParams.has("debug")) {
+      const debugInfo = {
+        upstreamStatus: apiResponse.status,
+        upstreamHeaders: Object.fromEntries(apiResponse.headers.entries()),
+        bodyLength: body.length,
+        bodyPreview: body.substring(0, 500),
+      };
+      return new Response(JSON.stringify(debugInfo, null, 2), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders(request) },
+      });
+    }
+
     return new Response(body, {
       status: apiResponse.status,
       headers: {
