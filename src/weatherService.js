@@ -9,8 +9,7 @@ const STATIONS = [
   { id: 'KMAWEBST37', name: 'Air Temp' }
 ];
 
-// Cloudflare Worker proxy — update this after deploying the worker in worker/
-const PROXY_BASE = 'https://weather-proxy.<your-subdomain>.workers.dev/?url=';
+const PROXY_BASE = 'https://kaloisi.white-hat-de0d.workers.dev/?url=';
 
 const NO_CACHE_HEADERS = {
   'Cache-Control': 'no-cache, no-store, must-revalidate',
