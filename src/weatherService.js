@@ -11,16 +11,10 @@ const STATIONS = [
 
 const PROXY_BASE = 'https://kaloisi.white-hat-de0d.workers.dev/?url=';
 
-const NO_CACHE_HEADERS = {
-  'Cache-Control': 'no-cache, no-store, must-revalidate',
-  'Pragma': 'no-cache',
-  'Expires': '0'
-};
-
 export async function fetchCurrentConditions(stationId) {
   const url = `https://api.weather.com/v2/pws/observations/current?stationId=${stationId}&format=json&units=e&numericPrecision=decimal&apiKey=${API_KEY}`;
   console.log(`Fetching current conditions from URL: ${url}`);
-  const response = await fetch(PROXY_BASE + encodeURIComponent(url), { headers: NO_CACHE_HEADERS });
+  const response = await fetch(PROXY_BASE + encodeURIComponent(url));
   if (!response.ok) {
     throw new Error(`Failed to fetch current conditions for ${stationId}`);
   }
@@ -31,7 +25,7 @@ export async function fetchCurrentConditions(stationId) {
 export async function fetchHistoricalData(stationId, date) {
   const formattedDate = date.toISOString().split('T')[0].replace(/-/g, '');
   const url = `https://api.weather.com/v2/pws/history/all?stationId=${stationId}&format=json&units=e&numericPrecision=decimal&date=${formattedDate}&apiKey=${API_KEY}`;
-  const response = await fetch(PROXY_BASE + encodeURIComponent(url), { headers: NO_CACHE_HEADERS });
+  const response = await fetch(PROXY_BASE + encodeURIComponent(url));
   if (!response.ok) {
     throw new Error(`Failed to fetch historical data for ${stationId} on ${formattedDate}`);
   }

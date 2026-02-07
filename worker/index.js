@@ -35,10 +35,12 @@ export default {
       });
     }
 
-    // Forward the request to the weather API
+    // Forward the request to the weather API with no-cache headers
     const apiResponse = await fetch(targetUrl, {
       headers: {
         "Accept": "application/json",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
       },
     });
 
