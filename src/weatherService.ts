@@ -70,8 +70,15 @@ async function fetchTodayRapidData(stationId: string): Promise<HistoricalRespons
   return response.json();
 }
 
+function formatDateLocal(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}${m}${d}`;
+}
+
 export async function fetchHistoricalData(stationId: string, date: Date): Promise<HistoricalResponse> {
-  const formattedDate = date.toISOString().split('T')[0].replace(/-/g, '');
+  const formattedDate = formatDateLocal(date);
   const url = `https://api.weather.com/v2/pws/history/all?stationId=${stationId}&format=json&units=e&numericPrecision=decimal&date=${formattedDate}&apiKey=${API_KEY}`;
   const response = await fetch(PROXY_BASE + encodeURIComponent(url));
   if (!response.ok) {
