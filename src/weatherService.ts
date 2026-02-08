@@ -61,6 +61,15 @@ export async function fetchCurrentConditions(stationId: string): Promise<Current
   return response.json();
 }
 
+async function fetchTodayRapidData(stationId: string): Promise<HistoricalResponse> {
+  const url = `https://api.weather.com/v2/pws/observations/all/1day?stationId=${stationId}&format=json&units=e&numericPrecision=decimal&apiKey=${API_KEY}`;
+  const response = await fetch(PROXY_BASE + encodeURIComponent(url));
+  if (!response.ok) {
+    throw new Error(`Failed to fetch today's data for ${stationId}`);
+  }
+  return response.json();
+}
+
 export async function fetchHistoricalData(stationId: string, date: Date): Promise<HistoricalResponse> {
   const formattedDate = date.toISOString().split('T')[0].replace(/-/g, '');
   const url = `https://api.weather.com/v2/pws/history/all?stationId=${stationId}&format=json&units=e&numericPrecision=decimal&date=${formattedDate}&apiKey=${API_KEY}`;
@@ -69,6 +78,15 @@ export async function fetchHistoricalData(stationId: string, date: Date): Promis
     throw new Error(`Failed to fetch historical data for ${stationId} on ${formattedDate}`);
   }
   return response.json();
+}
+
+function isToday(date: Date): boolean {
+  const today = new Date();
+  return (
+    date.getFullYear() === today.getFullYear() &&
+    date.getMonth() === today.getMonth() &&
+    date.getDate() === today.getDate()
+  );
 }
 
 export async function fetchLastNDaysData(days = 3): Promise<HistoricalDataMap> {
@@ -91,7 +109,9 @@ export async function fetchLastNDaysData(days = 3): Promise<HistoricalDataMap> {
 
     for (const date of dates) {
       try {
-        const result = await fetchHistoricalData(station.id, date);
+        const result = isToday(date)
+          ? await fetchTodayRapidData(station.id)
+          : await fetchHistoricalData(station.id, date);
         if (result.observations) {
           allData[station.id].data.push(...result.observations);
         }
@@ -103,6 +123,43 @@ export async function fetchLastNDaysData(days = 3): Promise<HistoricalDataMap> {
     allData[station.id].data.sort(
       (a, b) => new Date(a.obsTimeLocal).getTime() - new Date(b.obsTimeLocal).getTime()
     );
+  }
+
+  return allData;
+}
+
+export async function fetchLast24HoursData(): Promise<HistoricalDataMap> {
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const allData: HistoricalDataMap = {};
+
+  for (const station of STATIONS) {
+    allData[station.id] = {
+      name: station.name,
+      data: [],
+    };
+
+    try {
+      const [todayResult, yesterdayResult] = await Promise.all([
+        fetchTodayRapidData(station.id),
+        fetchHistoricalData(station.id, yesterday),
+      ]);
+
+      const combined = [
+        ...(todayResult.observations || []),
+        ...(yesterdayResult.observations || []),
+      ];
+
+      allData[station.id].data = combined
+        .filter((obs) => new Date(obs.obsTimeLocal).getTime() >= cutoff)
+        .sort(
+          (a, b) => new Date(a.obsTimeLocal).getTime() - new Date(b.obsTimeLocal).getTime()
+        );
+    } catch (error) {
+      console.error(`Error fetching 24h data for ${station.id}:`, error);
+    }
   }
 
   return allData;

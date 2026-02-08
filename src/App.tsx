@@ -26,6 +26,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import {
   fetchAllCurrentConditions,
   fetchLastNDaysData,
+  fetchLast24HoursData,
   STATIONS,
   WUNDERGROUND_DASHBOARD_URL,
   CurrentConditionsMap,
@@ -53,10 +54,17 @@ function App() {
   const [loadingChart, setLoadingChart] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [selectedDays, setSelectedDays] = useState(3);
+  const [selectedRange, setSelectedRange] = useState('3');
   const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set());
 
-  const loadData = useCallback(async (isManualRefresh = false, days = 3) => {
+  async function fetchChartData(range: string): Promise<HistoricalDataMap> {
+    if (range === '24h') {
+      return fetchLast24HoursData();
+    }
+    return fetchLastNDaysData(Number(range));
+  }
+
+  const loadData = useCallback(async (isManualRefresh = false, range = '3') => {
     try {
       if (isManualRefresh) {
         setRefreshing(true);
@@ -64,7 +72,7 @@ function App() {
 
         const [current, todayData] = await Promise.all([
           fetchAllCurrentConditions(),
-          fetchLastNDaysData(1),
+          fetchLast24HoursData(),
         ]);
         setCurrentConditions(current);
 
@@ -101,7 +109,7 @@ function App() {
 
         const [current, historical] = await Promise.all([
           fetchAllCurrentConditions(),
-          fetchLastNDaysData(days),
+          fetchChartData(range),
         ]);
 
         setCurrentConditions(current);
@@ -163,13 +171,13 @@ function App() {
     loadData(true);
   }
 
-  async function handleDaysChange(event: SelectChangeEvent<number>) {
-    const days = Number(event.target.value);
-    setSelectedDays(days);
+  async function handleRangeChange(event: SelectChangeEvent<string>) {
+    const range = event.target.value;
+    setSelectedRange(range);
 
     try {
       setLoadingChart(true);
-      const historical = await fetchLastNDaysData(days);
+      const historical = await fetchChartData(range);
       const mergedData = mergeHistoricalData(historical);
       setChartData(mergedData);
     } catch (err) {
@@ -296,19 +304,20 @@ function App() {
           <Typography variant="h5">Temperature History</Typography>
           <Stack direction="row" alignItems="center" spacing={1}>
             {loadingChart && <CircularProgress size={20} />}
-            <Select<number>
-              value={selectedDays}
-              onChange={handleDaysChange}
+            <Select<string>
+              value={selectedRange}
+              onChange={handleRangeChange}
               disabled={refreshing || loadingChart}
               size="small"
-              sx={{ minWidth: 130 }}
+              sx={{ minWidth: 150 }}
             >
-              <MenuItem value={1}>Current day</MenuItem>
-              <MenuItem value={3}>3 days</MenuItem>
-              <MenuItem value={7}>7 days</MenuItem>
-              <MenuItem value={14}>14 days</MenuItem>
-              <MenuItem value={28}>28 days</MenuItem>
-              <MenuItem value={45}>45 days</MenuItem>
+              <MenuItem value="24h">Last 24 hours</MenuItem>
+              <MenuItem value="1">Current day</MenuItem>
+              <MenuItem value="3">3 days</MenuItem>
+              <MenuItem value="7">7 days</MenuItem>
+              <MenuItem value="14">14 days</MenuItem>
+              <MenuItem value="28">28 days</MenuItem>
+              <MenuItem value="45">45 days</MenuItem>
             </Select>
           </Stack>
         </Stack>
