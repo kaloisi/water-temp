@@ -21,6 +21,7 @@ import Alert from '@mui/material/Alert';
 import Link from '@mui/material/Link';
 import Container from '@mui/material/Container';
 import Stack from '@mui/material/Stack';
+import Grid from '@mui/material/Grid';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import {
   fetchAllCurrentConditions,
@@ -244,48 +245,51 @@ function App() {
         </Stack>
       </Box>
 
-      <Stack direction="row" spacing={3} justifyContent="center" sx={{ mb: 5, flexWrap: 'wrap' }}>
+      <Grid container spacing={3} justifyContent="center" sx={{ mb: 5 }}>
         {STATIONS.map((station) => {
           const data = currentConditions[station.id];
           const temp = data?.data?.imperial?.temp;
           const obsTime = data?.data?.obsTimeLocal;
 
           return (
-            <Card key={station.id} sx={{ minWidth: 240, textAlign: 'center' }}>
-              <CardContent>
-                <Typography variant="h5" sx={{ color: 'primary.main', mb: 0.5 }}>
-                  {station.name}
-                </Typography>
-                <Link
-                  href={`${WUNDERGROUND_DASHBOARD_URL}${station.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  sx={{ fontSize: '0.85rem', opacity: 0.7 }}
-                >
-                  {station.id}
-                </Link>
-                {temp !== undefined ? (
-                  <>
-                    <Typography
-                      variant="h2"
-                      sx={{ color: 'success.main', fontWeight: 'bold', my: 1 }}
-                    >
-                      {temp.toFixed(1)}°F
-                    </Typography>
-                    <Typography variant="body2" sx={{ opacity: 0.7 }}>
-                      {obsTime ? new Date(obsTime).toLocaleString() : 'N/A'}
-                    </Typography>
-                  </>
-                ) : (
-                  <Typography variant="body1" sx={{ color: 'error.main', fontStyle: 'italic', mt: 2 }}>
-                    No data available
+            <Grid key={station.id} size={{ xs: 12, sm: 6, md: 4 }}>
+              <Card sx={{ textAlign: 'center' }}>
+                <CardContent>
+                  <Typography variant="h5" color="primary" sx={{ mb: 0.5 }}>
+                    {station.name}
                   </Typography>
-                )}
-              </CardContent>
-            </Card>
+                  <Link
+                    href={`${WUNDERGROUND_DASHBOARD_URL}${station.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{ fontSize: '0.85rem', opacity: 0.7 }}
+                  >
+                    {station.id}
+                  </Link>
+                  {temp !== undefined ? (
+                    <>
+                      <Typography
+                        variant="h2"
+                        color="success.main"
+                        sx={{ fontWeight: 'bold', my: 1 }}
+                      >
+                        {temp.toFixed(1)}°F
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {obsTime ? new Date(obsTime).toLocaleString() : 'N/A'}
+                      </Typography>
+                    </>
+                  ) : (
+                    <Typography variant="body1" color="error" sx={{ fontStyle: 'italic', mt: 2 }}>
+                      No data available
+                    </Typography>
+                  )}
+                </CardContent>
+              </Card>
+            </Grid>
           );
         })}
-      </Stack>
+      </Grid>
 
       <Card sx={{ p: 3 }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
@@ -341,11 +345,11 @@ function App() {
                   return [`${Number(value ?? 0).toFixed(1)}°F`, station?.name || name || ''];
                 }}
                 contentStyle={{
-                  backgroundColor: '#1a1a2e',
-                  border: '1px solid #334',
-                  color: '#eaeaea',
+                  backgroundColor: '#121212',
+                  border: '1px solid #333',
+                  color: '#fff',
                 }}
-                labelStyle={{ color: '#eaeaea' }}
+                labelStyle={{ color: '#fff' }}
               />
               <Legend
                 onClick={(e) => {
@@ -357,7 +361,7 @@ function App() {
                   const station = STATIONS.find((s) => s.id === value);
                   const isHidden = hiddenSeries.has(value);
                   return (
-                    <span style={{ color: isHidden ? '#666' : '#eaeaea', cursor: 'pointer' }}>
+                    <span style={{ color: isHidden ? '#666' : '#fff', cursor: 'pointer' }}>
                       {station?.name || value}
                     </span>
                   );
