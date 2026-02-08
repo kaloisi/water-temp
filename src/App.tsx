@@ -26,7 +26,6 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import {
   fetchAllCurrentConditions,
   fetchLastNDaysData,
-  fetchLast24HoursData,
   STATIONS,
   WUNDERGROUND_DASHBOARD_URL,
   CurrentConditionsMap,
@@ -57,13 +56,6 @@ function App() {
   const [selectedRange, setSelectedRange] = useState('3');
   const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set());
 
-  async function fetchChartData(range: string): Promise<HistoricalDataMap> {
-    if (range === '24h') {
-      return fetchLast24HoursData();
-    }
-    return fetchLastNDaysData(Number(range));
-  }
-
   const loadData = useCallback(async (isManualRefresh = false, range = '3') => {
     try {
       if (isManualRefresh) {
@@ -72,7 +64,7 @@ function App() {
 
         const [current, todayData] = await Promise.all([
           fetchAllCurrentConditions(),
-          fetchLast24HoursData(),
+          fetchLastNDaysData(1),
         ]);
         setCurrentConditions(current);
 
@@ -107,9 +99,10 @@ function App() {
         setLoading(true);
         setError(null);
 
+        const days = Number(range);
         const [current, historical] = await Promise.all([
           fetchAllCurrentConditions(),
-          fetchChartData(range),
+          fetchLastNDaysData(days),
         ]);
 
         setCurrentConditions(current);
@@ -177,7 +170,7 @@ function App() {
 
     try {
       setLoadingChart(true);
-      const historical = await fetchChartData(range);
+      const historical = await fetchLastNDaysData(Number(range));
       const mergedData = mergeHistoricalData(historical);
       setChartData(mergedData);
     } catch (err) {
@@ -311,8 +304,8 @@ function App() {
               size="small"
               sx={{ minWidth: 150 }}
             >
-              <MenuItem value="24h">Last 24 hours</MenuItem>
-              <MenuItem value="1">Current day</MenuItem>
+              <MenuItem value="1">Today</MenuItem>
+              <MenuItem value="2">1 day</MenuItem>
               <MenuItem value="3">3 days</MenuItem>
               <MenuItem value="7">7 days</MenuItem>
               <MenuItem value="14">14 days</MenuItem>

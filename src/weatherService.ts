@@ -128,43 +128,6 @@ export async function fetchLastNDaysData(days = 3): Promise<HistoricalDataMap> {
   return allData;
 }
 
-export async function fetchLast24HoursData(): Promise<HistoricalDataMap> {
-  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-
-  const allData: HistoricalDataMap = {};
-
-  for (const station of STATIONS) {
-    allData[station.id] = {
-      name: station.name,
-      data: [],
-    };
-
-    try {
-      const [todayResult, yesterdayResult] = await Promise.all([
-        fetchTodayRapidData(station.id),
-        fetchHistoricalData(station.id, yesterday),
-      ]);
-
-      const combined = [
-        ...(todayResult.observations || []),
-        ...(yesterdayResult.observations || []),
-      ];
-
-      allData[station.id].data = combined
-        .filter((obs) => new Date(obs.obsTimeLocal).getTime() >= cutoff)
-        .sort(
-          (a, b) => new Date(a.obsTimeLocal).getTime() - new Date(b.obsTimeLocal).getTime()
-        );
-    } catch (error) {
-      console.error(`Error fetching 24h data for ${station.id}:`, error);
-    }
-  }
-
-  return allData;
-}
-
 export async function fetchAllCurrentConditions(): Promise<CurrentConditionsMap> {
   const results: CurrentConditionsMap = {};
 
