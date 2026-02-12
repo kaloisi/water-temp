@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Lake with dock favicon">
+  <defs>
+    <!-- rounded-square mask -->
+    <clipPath id="r">
+      <rect x="0" y="0" width="64" height="64" rx="14" ry="14"/>
+    </clipPath>
+
+    <!-- subtle sky + water gradients -->
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8FD5FF"/>
+      <stop offset="1" stop-color="#EAF7FF"/>
+    </linearGradient>
+    <linearGradient id="water" x1="0" y1="0.45" x2="0" y2="1">
+      <stop offset="0" stop-color="#1FA0D7"/>
+      <stop offset="1" stop-color="#0C4FA6"/>
+    </linearGradient>
+    <linearGradient id="dock" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#D9A15B"/>
+      <stop offset="1" stop-color="#B7772F"/>
+    </linearGradient>
+    <linearGradient id="hill" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#7ED36F"/>
+      <stop offset="1" stop-color="#4EBB61"/>
+    </linearGradient>
+  </defs>
+
+  <g clip-path="url(#r)">
+    <!-- sky -->
+    <rect width="64" height="64" fill="url(#sky)"/>
+
+    <!-- clouds -->
+    <g fill="#FFFFFF" opacity="0.95">
+      <path d="M10 18c0-3 3-5 6-4 1-3 6-4 8-1 3-1 6 1 6 4 3 0 5 2 5 4H10c-3 0-5-1-5-3s2-4 5-4z"/>
+      <path d="M36 14c0-2 2-3 4-3 1-2 4-2 5 0 2-1 4 1 4 3 2 0 3 1 3 2H36c-2 0-3-1-3-2s1-3 3-3z" opacity="0.9"/>
+    </g>
+
+    <!-- far hills -->
+    <path d="M0 30 C10 24, 20 22, 32 26 C42 22, 54 23, 64 29 L64 36 L0 36 Z" fill="url(#hill)" opacity="0.85"/>
+    <path d="M0 33 C12 28, 26 28, 36 31 C46 34, 54 34, 64 31 L64 38 L0 38 Z" fill="#3EA85A" opacity="0.7"/>
+
+    <!-- tree line (simple triangles) -->
+    <g fill="#195C2D" opacity="0.95">
+      <path d="M44 37 l4-10 4 10z"/>
+      <path d="M50 37 l3-8 3 8z"/>
+      <path d="M56 37 l4-11 4 11z"/>
+    </g>
+    <g fill="#1E6A35" opacity="0.95">
+      <path d="M42 38 l5-13 5 13z"/>
+      <path d="M53 38 l4-10 4 10z"/>
+    </g>
+
+    <!-- water -->
+    <path d="M0 36 H64 V64 H0 Z" fill="url(#water)"/>
+
+    <!-- shoreline rocks (bottom-left) -->
+    <g opacity="0.95">
+      <path d="M0 58 C6 54, 12 54, 18 58 L18 64 L0 64 Z" fill="#A57B46"/>
+      <path d="M10 60 C14 57, 20 57, 24 60 L24 64 L10 64 Z" fill="#8C623B"/>
+    </g>
+
+    <!-- water highlights -->
+    <g fill="none" stroke="#CFF3FF" stroke-linecap="round">
+      <path d="M10 44 C16 40, 24 40, 30 44 S44 48, 50 44" stroke-width="3" opacity="0.95"/>
+      <path d="M8 53 C14 50, 22 50, 28 53 S42 56, 48 53" stroke-width="3" opacity="0.9"/>
+      <path d="M6 60 C12 58, 18 58, 24 60" stroke-width="2.5" opacity="0.6"/>
+    </g>
+
+    <!-- dock -->
+    <!-- pilings -->
+    <g>
+      <rect x="36" y="43" width="4" height="14" rx="1.5" fill="#2B1D12"/>
+      <rect x="50" y="46" width="4" height="14" rx="1.5" fill="#2B1D12"/>
+      <rect x="44" y="40" width="4" height="12" rx="1.5" fill="#2B1D12" opacity="0.95"/>
+    </g>
+    <!-- dock deck -->
+    <path d="M26 64 L60 64 L60 44 L34 46 Z" fill="url(#dock)"/>
+    <!-- planks -->
+    <g stroke="#9B5F22" stroke-width="1.2" opacity="0.55">
+      <path d="M34 46 L60 44"/>
+      <path d="M32 50 L60 48"/>
+      <path d="M30 54 L60 52"/>
+      <path d="M28 58 L60 56"/>
+      <path d="M26 62 L60 60"/>
+    </g>
+    <!-- dock edge shadow -->
+    <path d="M26 64 L60 64 L60 60 L28 62 Z" fill="#000" opacity="0.12"/>
+  </g>
+</svg>
