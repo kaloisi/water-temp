@@ -8,6 +8,11 @@ A React application that displays temperature data from two Weather Underground 
 - Shows a historical temperature chart for the last 3 days
 - Responsive design that works on desktop and mobile
 
+## iOS & macOS widget
+
+A native SwiftUI app and home screen / desktop widget lives in [`apple/`](apple/README.md).
+Open `apple/WaterTemp.xcodeproj` in Xcode 16+.
+
 ## Development
 
 ```bash
