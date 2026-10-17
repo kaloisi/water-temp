@@ -28,7 +28,7 @@ private struct TileView: View {
 
     private var maxRows: Int {
         switch family {
-        case .systemSmall: 3
+        case .systemSmall: 2
         case .systemMedium: 3
         case .systemLarge: 8
         default: 12
@@ -63,7 +63,7 @@ private struct TileView: View {
 
             if visible.isEmpty {
                 Spacer(minLength: 0)
-                Text("No stations. Edit the widget or open Water Temp to add one.")
+                Text("No stations. Open Water Temp to add one.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -103,11 +103,22 @@ private struct ReadingRow: View {
                 Image(systemName: "exclamationmark.triangle")
                     .foregroundStyle(.orange)
             } else {
-                Text(reading.temperatureText)
-                    .font(compact ? .title3 : .title2)
-                    .fontWeight(.semibold)
-                    .monospacedDigit()
-                    .minimumScaleFactor(0.7)
+                // Small widgets are narrow, so °C goes under °F; wider
+                // widgets keep each row to one line by putting it alongside.
+                let layout = compact
+                    ? AnyLayout(VStackLayout(alignment: .trailing, spacing: 0))
+                    : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 6))
+                layout {
+                    Text(reading.fahrenheitText)
+                        .font(compact ? .title3 : .title2)
+                        .fontWeight(.semibold)
+                    Text(reading.celsiusText)
+                        .font(compact ? .caption2 : .subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
             }
         }
         .contentShape(Rectangle())

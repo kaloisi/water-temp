@@ -8,13 +8,10 @@ from one or more Weather Underground personal weather stations (PWS).
   (rectangular and inline) on iOS. Refreshes about every 15 minutes.
 - **Tap a station** to open its Weather Underground page
   (`https://www.wunderground.com/dashboard/pws/<ID>`) in your browser.
-- **Add / remove stations** in two ways:
-  - In the **Water Temp app**: type a station ID to add it (it's checked against
-    the weather service first), swipe or right-click to remove, drag to reorder.
-    Every widget that isn't customized shows this list.
-  - Per widget, via **Edit Widget** (long-press on iOS, right-click on macOS):
-    add or remove entries under *Station IDs*. Leave it empty to follow the
-    app's list.
+- **Add / remove stations** in the **Water Temp app**: type a station ID to add
+  it (it's checked against the weather service first), swipe or right-click to
+  remove, drag to reorder. Every widget always shows this same list, in the
+  same order, and reloads as soon as you change it.
 
 ## Requirements
 
@@ -42,7 +39,7 @@ from one or more Weather Underground personal weather stations (PWS).
 | --- | --- |
 | `Shared/` | Code compiled into both targets: the `Station` model, the App Group–backed `StationStore`, `WeatherService` (calls `api.weather.com` directly — no CORS proxy needed natively), and `DeepLink`. |
 | `WaterTemp/` | The SwiftUI app: station list, add/remove, and the URL handler. |
-| `WaterTempWidget/` | The widget extension: `ConfigurationAppIntent` (per-widget station IDs), the timeline provider, and the views. |
+| `WaterTempWidget/` | The widget extension: the timeline provider (which reads the shared `StationStore`) and the views. |
 | `Config/` | Entitlements and Info.plist additions for each target. |
 
 Widget taps launch the containing app with a `watertemp://station/<ID>` URL, and

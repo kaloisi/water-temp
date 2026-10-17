@@ -11,6 +11,19 @@ struct WaterTempApp: App {
             ContentView()
                 .environmentObject(model)
         }
+        .defaultSize(width: 600, height: 360)
+        .commands {
+            CommandGroup(replacing: .newItem) {
+                Button("Add Station…") { model.isPresentingAddStation = true }
+                    .keyboardShortcut("n")
+            }
+            CommandGroup(before: .toolbar) {
+                Button("Refresh") { Task { await model.refresh() } }
+                    .keyboardShortcut("r")
+                    .disabled(model.isRefreshing)
+                Divider()
+            }
+        }
         #else
         WindowGroup {
             ContentView()

@@ -24,9 +24,21 @@ struct Reading: Hashable, Identifiable {
 
     var id: String { stationID }
 
+    /// The service reports imperial units, so `temperature` is in °F.
+    var celsius: Double? { temperature.map { ($0 - 32) * 5 / 9 } }
+
+    var fahrenheitText: String { Self.format(temperature, unit: "F") }
+    var celsiusText: String { Self.format(celsius, unit: "C") }
+
+    /// Both units on one line, e.g. `68.4°F / 20.2°C`.
     var temperatureText: String {
-        guard let temperature else { return "--" }
-        return String(format: "%.1f°", temperature)
+        guard temperature != nil else { return "--" }
+        return "\(fahrenheitText) / \(celsiusText)"
+    }
+
+    private static func format(_ value: Double?, unit: String) -> String {
+        guard let value else { return "--" }
+        return String(format: "%.1f°%@", value, unit)
     }
 
     init(station: Station, observation: Observation) {

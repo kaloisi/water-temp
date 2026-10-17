@@ -1,9 +1,38 @@
 import SwiftUI
 
+/// Hosts the platform's station UI and the behavior both share: refreshing
+/// when the app becomes active and forwarding widget taps to the browser.
 struct ContentView: View {
     @EnvironmentObject private var model: StationListModel
     @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
+
+    var body: some View {
+        Group {
+            #if os(macOS)
+            StationTableView()
+            #else
+            StationListView()
+            #endif
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                Task { await model.refresh() }
+            }
+        }
+        .task { await model.refresh() }
+        .onOpenURL { url in
+            if let browserURL = DeepLink.browserURL(for: url) {
+                openURL(browserURL)
+            }
+        }
+    }
+}
+
+#if os(iOS)
+private struct StationListView: View {
+    @EnvironmentObject private var model: StationListModel
+    @Environment(\.openURL) private var openURL
 
     @State private var newStationID = ""
     @State private var newStationName = ""
@@ -41,9 +70,7 @@ struct ContentView: View {
                 Section {
                     TextField("Station ID (e.g. KMAWEBST38)", text: $newStationID)
                         .autocorrectionDisabled()
-                        #if os(iOS)
                         .textInputAutocapitalization(.characters)
-                        #endif
                         .onSubmit(addStation)
                     TextField("Name (optional)", text: $newStationName)
                         .onSubmit(addStation)
@@ -72,9 +99,7 @@ struct ContentView: View {
             .navigationTitle("Water Temp")
             .refreshable { await model.refresh() }
             .toolbar {
-                #if os(iOS)
                 ToolbarItem(placement: .topBarLeading) { EditButton() }
-                #endif
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         Task { await model.refresh() }
@@ -85,20 +110,6 @@ struct ContentView: View {
                 }
             }
         }
-        .onChange(of: scenePhase) { _, phase in
-            if phase == .active {
-                Task { await model.refresh() }
-            }
-        }
-        .task { await model.refresh() }
-        .onOpenURL { url in
-            if let browserURL = DeepLink.browserURL(for: url) {
-                openURL(browserURL)
-            }
-        }
-        #if os(macOS)
-        .frame(minWidth: 360, minHeight: 420)
-        #endif
     }
 
     private func addStation() {
@@ -134,8 +145,12 @@ private struct StationRow: View {
             Spacer()
             if let reading, !reading.failed {
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text(reading.temperatureText + "F")
+                    Text(reading.fahrenheitText)
                         .font(.title2.weight(.semibold))
+                        .monospacedDigit()
+                    Text(reading.celsiusText)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
                         .monospacedDigit()
                     if let observedAt = reading.observedAt {
                         Text(observedAt, style: .time)
@@ -154,6 +169,7 @@ private struct StationRow: View {
         .contentShape(Rectangle())
     }
 }
+#endif
 
 #Preview {
     ContentView()

@@ -14,7 +14,9 @@ struct TemperatureEntry: TimelineEntry {
     )
 }
 
-struct Provider: AppIntentTimelineProvider {
+/// Always shows the station list saved by the Water Temp app, so every widget
+/// matches the app.
+struct Provider: TimelineProvider {
     /// How often WidgetKit is asked to refresh. The system may stretch this.
     private let refreshInterval: TimeInterval = 15 * 60
 
@@ -22,20 +24,23 @@ struct Provider: AppIntentTimelineProvider {
         .placeholder
     }
 
-    func snapshot(for configuration: ConfigurationAppIntent, in context: Context) async -> TemperatureEntry {
+    func getSnapshot(in context: Context, completion: @escaping @Sendable (TemperatureEntry) -> Void) {
         if context.isPreview {
-            return .placeholder
+            completion(.placeholder)
+            return
         }
-        return await entry(for: configuration)
+        Task { completion(await currentEntry()) }
     }
 
-    func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<TemperatureEntry> {
-        let entry = await entry(for: configuration)
-        return Timeline(entries: [entry], policy: .after(entry.date.addingTimeInterval(refreshInterval)))
+    func getTimeline(in context: Context, completion: @escaping @Sendable (Timeline<TemperatureEntry>) -> Void) {
+        Task {
+            let entry = await currentEntry()
+            completion(Timeline(entries: [entry], policy: .after(entry.date.addingTimeInterval(refreshInterval))))
+        }
     }
 
-    private func entry(for configuration: ConfigurationAppIntent) async -> TemperatureEntry {
-        let readings = await WeatherService.readings(for: configuration.resolvedStations())
+    private func currentEntry() async -> TemperatureEntry {
+        let readings = await WeatherService.readings(for: StationStore.load())
         return TemperatureEntry(date: .now, readings: readings)
     }
 }
@@ -52,7 +57,7 @@ struct WaterTempWidget: Widget {
     }
 
     var body: some WidgetConfiguration {
-        AppIntentConfiguration(kind: kind, intent: ConfigurationAppIntent.self, provider: Provider()) { entry in
+        StaticConfiguration(kind: kind, provider: Provider()) { entry in
             WaterTempWidgetEntryView(entry: entry)
                 .containerBackground(.fill.tertiary, for: .widget)
         }
